@@ -1,0 +1,85 @@
+import pandas as pd
+from sklearn.utils import resample
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load the dataset
+try:
+    churnData = pd.read_csv('Customer-Churn (1).csv')
+except FileNotFoundError:
+    print("The file 'Customer-Churn (1).csv' was not found. Please ensure it is in the same directory as the script.")
+    exit()
+
+# --- Chart for Imbalanced Data ---
+# Create a figure for the first plot
+plt.figure(figsize=(8, 6))
+
+# Create a bar plot of the churn counts
+churnData['Churn'].value_counts().sort_index().plot(kind='bar', color=['skyblue', 'salmon'])
+
+# Set the title and labels
+plt.title('Class Distribution Before Balancing')
+plt.xlabel('Churn')
+plt.ylabel('Number of Customers')
+
+# Set the x-tick labels for clarity
+plt.xticks(ticks=[0, 1], labels=['No', 'Yes'], rotation=0)
+
+# Save the figure to a file
+plt.savefig('imbalanced_distribution.png')
+# Clear the current figure to start fresh for the next plot
+plt.clf()
+
+print("Generated imbalanced_distribution.png")
+
+# --- Data Preparation for Resampling ---
+# Convert the 'Churn' column to numeric (0 and 1) for resampling
+churnData['Churn'] = churnData['Churn'].map({'Yes': 1, 'No': 0})
+
+# Separate the majority and minority classes
+majority = churnData[churnData.Churn == 0]
+minority = churnData[churnData.Churn == 1]
+
+# --- Upsampling and Chart Generation ---
+# Upsample the minority class to match the size of the majority class
+minority_upsampled = resample(minority,
+                                 replace=True, # Sample with replacement
+                                 n_samples=len(majority), # Match the number of samples in the majority class
+                                 random_state=42) # For reproducible results
+
+# Combine the majority class with the upsampled minority class
+upsampled_data = pd.concat([majority, minority_upsampled])
+
+# --- Chart for Upsampled Data ---
+plt.figure(figsize=(8, 6))
+upsampled_data['Churn'].value_counts().sort_index().plot(kind='bar', color=['skyblue', 'salmon'])
+plt.title('Class Distribution After Upsampling')
+plt.xlabel('Churn')
+plt.ylabel('Number of Customers')
+plt.xticks(ticks=[0, 1], labels=['No', 'Yes'], rotation=0)
+plt.savefig('upsampled_distribution.png')
+plt.clf()
+
+print("Generated upsampled_distribution.png")
+
+# --- Downsampling and Chart Generation ---
+# Downsample the majority class to match the size of the minority class
+majority_downsampled = resample(majority,
+                                 replace=False, # Sample without replacement
+                                 n_samples=len(minority), # Match the number of samples in the minority class
+                                 random_state=42) # For reproducible results
+
+# Combine the downsampled majority class with the original minority class
+downsampled_data = pd.concat([majority_downsampled, minority])
+
+# --- Chart for Downsampled Data ---
+plt.figure(figsize=(8, 6))
+downsampled_data['Churn'].value_counts().sort_index().plot(kind='bar', color=['skyblue', 'salmon'])
+plt.title('Class Distribution After Downsampling')
+plt.xlabel('Churn')
+plt.ylabel('Number of Customers')
+plt.xticks(ticks=[0, 1], labels=['No', 'Yes'], rotation=0)
+plt.savefig('downsampled_distribution.png')
+plt.clf()
+
+print("Generated downsampled_distribution.png")
